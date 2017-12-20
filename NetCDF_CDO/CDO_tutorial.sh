@@ -12,6 +12,7 @@ ncfile=sv03-med-ingv-tem-an-fc-d_1512631329207.nc
 ncdump -h $ncfile
 ncdump -v depth $ncfile
 
+#================== CDO ================================================
 #================== BASIC INFO =========================================
 
 # Getting basic information about / from the NetCDF file
@@ -50,9 +51,6 @@ cdo splitmon $ncfile cmems_thetao_month_
 # Select Timestep:
 cdo seltimestep,12,13,14 $ncfile cmems_timesteps_12-14.nc
 
-# Select Times:
-cdo seltime,2017-10-05,2017-10-06,2017-10-07 $ncfile cmems_times_12-14.nc
-
 # Select Dates:
 cdo seldate,2017-10-05T00:00:00,2017-10-07T00:00:00 $ncfile cmems_dates.nc
 cdo showdate cmems_dates.nc
@@ -70,28 +68,46 @@ cdo selindexbox,3,20,30,45 $ncfile cmems_box.nc
 # Select Single Point:
 cdo selindexbox,21,21,32,32 $ncfile cmems_point.nc
 
+#================== GRID REMAPINGS ===================================
 
-#================== GRID REMAPINGS / GRIB to NETCDF CONVERSION =========
+# Generate grid file from the original NetCDF:
+cdo griddes sv03-med-ingv-tem-an-fc-d_1512631329207.nc > cmems_t_original_grid.txt
 
-# ALADIN atmospheric model output grib in Lambert Conformal Conic grid:
-# ALZ000_2017120621.grb
+# Copy cmems_t_original_grid.txt to cmems_t_inset_grid.txt and modify it as you like
+# for example:
+#
+# gridID 1
+#
+# gridtype  = lonlat
+# gridsize  = 19600
+# xsize     = 140
+# ysize     = 140
+# xname     = lon
+# xlongname = "longitude"
+# xunits    = "degrees_east"
+# yname     = lat
+# ylongname = "latitude"
+# yunits    = "degrees_north"
+# xfirst    = 12
+# xinc      = 0.02
+# yfirst    = 44
+# yinc      = 0.02
 
-# Let's interpolate this GRIB to the LAT-LON grid:
-	# Generate ALADIN LAT-LON GRID - you can do it manualy, i will be lazy:
-	cdo griddes asmomo_2017120700+0057.grb > as_latlon.grid
-	
-	# BILINEAR remap from LCC to target.LATLON grid:
-	cdo remapbil,as_latlon.grid AL000_2017120706.grb AL000_2017120706_latlon.grb
+# Nearest Neighbour remap:
+cdo remapnn,cmems_t_inset_grid.txt sv03-med-ingv-tem-an-fc-d_1512631329207.nc sv03-med-ingv-temp_inset.nc
 
-	# conver GRIB to NETCDF:
-	cdo -f nc4 copy AL000_2017120706_latlon.grb AL000_2017120706_latlon.nc
+# Bilinear remap:
+cdo remapbil,cmems_t_inset_grid.txt sv03-med-ingv-tem-an-fc-d_1512631329207.nc sv03-med-ingv-temp_inset.nc
 
-	# Generate CMEMS target grid:
-	cdo griddes $ncfile > cmems_latlon.grid
 
-	# BILINEAR:
-	# Perform BILINEAR remaping from LCC to target.grid:
-	cdo remapbil,cmems_latlon.grid AL000_2017120706_latlon.nc AL000_2017120706_latlon_cmems.nc
+#================== GRIB TO NETCDF CONVERSION ===================================
+
+# Very often, Met Office data comes in GRIB format. Like this one:
+# asmomo_2017120700+0057.grb
+
+# You might need to convert this to NetCDF, and CDO gives you this possibility:
+cdo -f nc copy asmomo_2017120700+0057.grb asmomo_2017120700+0057.nc
+
 
 #================== BASIC STATISTICS ===================================
 
@@ -114,13 +130,13 @@ cdo timmin $ncfile cmems_timmin.nc
 # SPEED = SQRT(U**2 + V**2)
 
 # extract U:
-cdo selname,var33 AL000_2017120706_latlon.nc U.nc
+cdo selname,var33 asmomo_2017120700+0057.nc U.nc
 
 # Square U:
 cdo sqr U.nc U2.nc
 
 # extract V:
-cdo selname,var34 AL000_2017120706_latlon.nc V.nc
+cdo selname,var34 asmomo_2017120700+0057.nc V.nc
 
 # Square V:
 cdo sqr V.nc V2.nc
