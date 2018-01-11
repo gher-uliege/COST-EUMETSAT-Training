@@ -59,6 +59,10 @@ cdo showdate cmems_dates.nc
 cdo selmon,11 $ncfile cmems_month11.nc
 cdo showdate cmems_month11.nc
 
+# Select Season (JFMAMJJASOND):
+cdo select,season=OND $ncfile mfs_2017_OND.nc
+cdo showdate mfs_2017_OND.nc
+
 # Select Longitude-Latitude Subset:
 cdo sellonlatbox,12.5,13.8,45.4,45.8 $ncfile cmems_ts.nc
 
