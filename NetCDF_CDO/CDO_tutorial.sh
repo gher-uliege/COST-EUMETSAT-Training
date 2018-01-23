@@ -127,6 +127,9 @@ cdo timmax $ncfile cmems_timmax.nc
 # Min over Time:
 cdo timmin $ncfile cmems_timmin.nc
 
+# Linear Regression for a specific Season:
+cdo trend mfs_2017_OND.nc k0_mfs_2017_OND.nc k1_mfs_2017_OND.nc
+
 #================== BASIC ARITHMETICS ==================================
 
 # Compute surface windspeed from (u,v).
@@ -151,6 +154,18 @@ cdo add U2.nc V2.nc U2+V2.nc
 # Windspeed:
 cdo sqrt U2+V2.nc windspeed.nc
 
-exit
 
+#================== COMBINING OPERATORS ==============================
 
+# Extract December Data from a Single Point and compute Linear Trend at its Location:
+# Intermediate output files are not created, only streamed:
+
+# Without chaining the operators:
+# cdo selindexbox,21,21,32,32 $ncfile tmp1.nc
+# cdo selmon,12 tmp1.nc tmp2.nc
+# cdo trend tmp2.nc tmp_k0.nc tmp_k1.nc
+# rm tmp1.nc tmp2.nc
+
+# WITH chaining of operators:
+cdo trend -selmon,12 -selindexbox,21,21,32,32 $ncfile point_k0.nc point_k1.nc
+#   3rd op  2nd op         1st operation      input        final outputs
