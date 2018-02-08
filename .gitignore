@@ -1,4 +1,4 @@
 *log
 *Log
 NetCDF-regridding/output/
-NetCDF-regridding/.ipynb_checkpoints/
+*.ipynb_checkpoints/
